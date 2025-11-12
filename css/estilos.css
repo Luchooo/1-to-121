@@ -58,7 +58,6 @@ header{
 .objetivo{
   color: white;
   font-weight: bold;
-  font-size: 33px;
   font-family: Arial;
 }
 
@@ -213,9 +212,9 @@ body.game-mode header .fa {
   font-size: 2.2em !important;
 }
 
-body.game-mode .objetivo {
+/* body.game-mode .objetivo {
   font-size: 40px;
-}
+} */
 
 /* Make header items distribute evenly and be easier to tap */
 body.game-mode header {
@@ -230,8 +229,8 @@ body.game-mode header {
   body.game-mode #chess_board { margin: 6px auto; }
 }
 
-/* Better stacked header controls for very small screens when playing */
-@media screen and (max-width: 420px) {
+/* Better stacked header controls for small-to-medium screens when playing (not tiny phones) */
+@media screen and (min-width: 421px) and (max-width: 600px) {
   body.game-mode header {
     flex-direction: column;
     align-items: center;
@@ -267,6 +266,181 @@ body.game-mode header {
 
   /* ensure board is pushed below header so controls are reachable */
   body.game-mode #escenario { margin-top: 6px; padding-top: 8px; }
+}
+
+/* Bottom bar (mobile) - hidden by default, shown on small screens in game-mode */
+.bottom-bar {
+  display: none;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 64px;
+  background: rgba(255,255,255,0.98);
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.12);
+  z-index: 10000;
+  align-items: center;
+  justify-content: space-around;
+}
+.bottom-bar .bb-btn {
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #2b2b2b;
+  min-width: 56px;
+  padding: 6px 8px;
+}
+.bottom-bar .bb-btn i { font-size: 20px; }
+.bottom-bar .bb-btn span { font-size: 11px; margin-top: 3px; }
+.bottom-bar .bb-objetivo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+@media screen and (max-width: 420px) {
+  /* bottom-bar is only visible while in game-mode on small screens */
+  .bottom-bar { display: none; }
+
+  /* show a compact, fixed header in game-mode with only tiempo and ayuda visible
+     and styled as game badges */
+  body.game-mode header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 64px;
+    padding: 8px 12px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9998;
+    background: linear-gradient(180deg, rgba(38,140,159,0.98), rgba(25,106,123,0.98));
+    border-bottom: 6px solid rgba(0,0,0,0.12);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+    border-radius: 0 0 10px 10px;
+  }
+
+  /* Force only tiempo and ayuda to be visible in this compact header and style them */
+  body.game-mode header > * { display: none !important; }
+
+  body.game-mode #tiempo, body.game-mode #ayuda {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 10px;
+    color: #fff;
+    font-size: 1.05em;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.06);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+    margin: 0 8px;
+  }
+
+  /* circular icon background for a playful look */
+  body.game-mode #tiempo .fa, body.game-mode #ayuda .fa {
+    font-size: 1.2em !important;
+    color: #fff;
+    background: rgba(255,255,255,0.08);
+    padding: 6px;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* slightly larger numeric text for readability */
+  #tiempo-texto { font-size: 1.15em; font-weight: 700; margin-left: 6px; }
+  #ayuda-texto { font-size: 1.05em; font-weight: 700; margin-left: 4px; }
+
+  /* make room for fixed header and bottom bar so board is not covered */
+  #escenario { padding-top: 84px; padding-bottom: 92px; }
+
+  /* bottom-bar visible only in game-mode on small screens */
+  body.game-mode .bottom-bar { display: flex; }
+}
+
+/* Hide bottom bar and header controls when welcome overlay is active */
+body.welcome-active .bottom-bar { display: none !important; }
+body.welcome-active header .play,
+body.welcome-active header .volumen,
+body.welcome-active header .salir,
+body.welcome-active header .info,
+body.welcome-active header .follow_me_github { display: none !important; }
+
+/* Desktop / large screens: show full header controls when playing */
+@media screen and (min-width: 421px) {
+  body.game-mode header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 74px;
+    padding: 10px 24px;
+    background: linear-gradient(180deg,#2e9aaa,#1f7f88);
+    border-bottom: 10px solid #2f4960;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    position: relative; /* allow centering the objetivo */
+  }
+
+  body.game-mode header .tiempo,
+  body.game-mode header .volumen,
+  body.game-mode header .objetivo,
+  body.game-mode header .ayuda,
+  body.game-mode header .salir {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 10px;
+    margin: 0 12px;
+    color: #fff;
+  }
+
+  body.game-mode header .fa {
+    font-size: 1.8em !important;
+    color: #fff;
+  }
+
+  /* Emphasize time and keep ayudas visible */
+  body.game-mode #tiempo { font-size: 1.3em; font-weight: 800; }
+  body.game-mode #ayuda { font-size: 1.0em; font-weight: 700; }
+  
+  /* Layout: left controls, centered objetivo, right controls */
+  /* Left group: play, tiempo, volumen */
+  #play, #tiempo, #volumen { order: 1; }
+  /* Center objetivo should be centered absolutely */
+  #objetivo { order: 2; position: absolute; left: 50%; transform: translateX(-50%); display:flex; align-items:center; gap:8px; max-width:260px; }
+  #objetivo .fa { font-size: 2.2em !important; }
+  #objetivo span { font-size: 1.6em; font-weight: 900; color: #fff; margin-left: 6px; }
+  /* Right group: salir, ayuda */
+  #salir, #ayuda { order: 3; }
+
+  /* Make left and right groups align nicely */
+  #tiempo, #volumen, #salir, #ayuda { display: inline-flex; align-items:center; gap:6px; margin: 0 8px; }
+
+  /* Hover effects to make UI feel interactive */
+  header .play:hover,
+  header .volumen:hover,
+  header .salir:hover,
+  header .ayuda:hover,
+  header .info:hover,
+  header .follow_me_github:hover {
+    transform: translateY(-2px);
+    transition: transform 160ms ease;
+    filter: brightness(1.06);
+    cursor: pointer;
+  }
+
+  /* Ensure objetivo doesn't overlap controls on very narrow large viewports */
+  @media (max-width: 900px) {
+    #objetivo { position: relative; transform: none; margin: 0 auto; }
+  }
 }
 
 /* Welcome overlay styles */

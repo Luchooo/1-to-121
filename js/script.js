@@ -78,14 +78,17 @@ $(function () {
 		ensureAudioReady();
 	});
 
+	// mark welcome active so UI can hide irrelevant controls
+	$('body').addClass('welcome-active');
+
 	// Handlers for welcome overlay buttons
 	$(document).on('click', '#welcome-play', function (e) {
 		e.preventDefault();
 		try {
 			ensureAudioReady();
 		} catch (err) {}
-		// remove game-mode class when not playing
-		$('body').removeClass('game-mode');
+		// remove welcome-active state and start the game
+		$('body').removeClass('welcome-active');
 		// hide overlay then trigger play flow
 		$('#welcome').fadeOut(300, function () {
 			$('#play').click();
@@ -98,9 +101,12 @@ $(function () {
 		$('#info').click();
 	});
 
+	$(document).on('click', '#welcome-author', function (e) {
+		e.preventDefault();
+		window.open('https://github.com/Luchooo', '_blank');
+	});
+
 	$(document).on('click', '#welcome-sound', function (e) {
-		// add game-mode class to body to apply larger controls/layout while playing
-		$('body').addClass('game-mode');
 		e.preventDefault();
 		// Toggle volume and reflect icon
 		try {
@@ -120,6 +126,54 @@ $(function () {
 			}
 		}, 50);
 	});
+
+	// Bottom bar button mappings (for small devices)
+	$(document).on('click', '#bottom-play', function (e) {
+		e.preventDefault();
+		try {
+			ensureAudioReady();
+		} catch (err) {}
+		// hide welcome if visible and remove welcome-active
+		$('body').removeClass('welcome-active');
+		$('#welcome').fadeOut(200);
+		// trigger existing play
+		$('#play').click();
+	});
+
+	$(document).on('click', '#bottom-vol', function (e) {
+		e.preventDefault();
+		$('#volumen').click();
+		setTimeout(syncBottomVolumeIcon, 50);
+	});
+
+	$(document).on('click', '#bottom-ayuda', function (e) {
+		e.preventDefault();
+		$('#ayuda').click();
+	});
+	$(document).on('click', '#bottom-salir', function (e) {
+		e.preventDefault();
+		$('#salir').click();
+	});
+
+	// Keep bottom objective number in sync
+	function syncBottomObjective() {
+		var val = $('#objetivo-numero').text() || $('#bottom-objetivo-num').text();
+		$('#bottom-objetivo-num').text(val);
+	}
+	// Sync volume icon helper
+	function syncBottomVolumeIcon() {
+		var muted = createjs && createjs.Sound && createjs.Sound.muted;
+		var $i = $('#bottom-vol i');
+		if (muted) {
+			$i.removeClass('fa-volume-up').addClass('fa-volume-off');
+		} else {
+			$i.removeClass('fa-volume-off').addClass('fa-volume-up');
+		}
+	}
+
+	// observe changes to objetivo number occasionally (simple interval)
+	setInterval(syncBottomObjective, 500);
+	setInterval(syncBottomVolumeIcon, 800);
 
 	iniciarJuego();
 
@@ -816,6 +870,8 @@ $(function () {
 		$('#ayuda').hide();
 		$('#objetivo').hide();
 		$('#share').hide();
+		// ensure game-mode is removed when in initial params
+		$('body').removeClass('game-mode');
 	}
 
 	function mostrarOpciones() {
@@ -828,6 +884,8 @@ $(function () {
 		$('#ayuda').css('display', 'inline-block').show();
 		$('#objetivo').css('display', 'inline-block').show();
 		$('#share').css('display', 'inline-block').show();
+		// mark that game UI is active: simplify header and show bottom bar on mobile
+		$('body').addClass('game-mode');
 	}
 
 	function randomColor() {
