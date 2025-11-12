@@ -31,6 +31,7 @@ Encuentra todos los números del **1 al 121** en orden secuencial dentro de la c
 1. **Inicia un servidor local** (necesario para evitar errores de CORS):
 
    **Opción A - VS Code:**
+
    - Instala la extensión "Live Server"
    - Haz clic derecho en `index.html` → "Open with Live Server"
 
@@ -158,31 +159,10 @@ Cuando activas el easter egg, obtienes:
 - Efectos de transición suaves
 - Feedback visual inmediato
 
-## 🐛 Solución de Problemas
-
-### Error de CORS
-
-Si ves errores de CORS en la consola del navegador, asegúrate de ejecutar el juego a través de un servidor local (no abriendo el archivo directamente con `file://`). El juego **debe** ejecutarse desde un servidor HTTP.
-
-
-### Los sonidos no funcionan
-
-Algunos navegadores bloquean la reproducción automática de audio. Asegúrate de hacer clic en el botón Play primero.
-
-### El juego no carga
-
-Verifica que todas las rutas de archivos sean correctas y que estés ejecutando el servidor desde el directorio raíz del proyecto.
-
-### El botón de reinicio (X) no funciona correctamente
-
-El botón de reinicio te lleva a la pantalla de carga (`loading/index.html`), que después de 6 segundos te redirige de vuelta al juego principal. Si ves errores, verifica que estés usando un servidor local y no abriendo los archivos directamente.
-
 ## 👨‍💻 Autor
 
 **Luis Sánchez**
 
-- Twitter: [@Luchooo_0](https://twitter.com/Luchooo_0)
-- Facebook: [Luis UnshodTech](https://www.facebook.com/luis.unshodtech)
 - GitHub: [Luchooo](https://github.com/Luchooo)
 
 ## 📝 Licencia
@@ -196,4 +176,3 @@ Este proyecto es de código abierto y está disponible para uso educativo y pers
 ---
 
 ¡Diviértete jugando y desafía a tus amigos a ver quién completa el juego más rápido! 🚀
-
