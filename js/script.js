@@ -8,19 +8,64 @@ var dimensiones=11;
 var mostrando = false;
 var objetivo=1;
 var ayudas=6;
-var alto= screen.height;
-var ancho= screen.width;
+var alto= window.innerHeight;
+var ancho= window.innerWidth;
 var matriz=[[],[],[],[],[],[],[],[],[],[],[]];
 var animaciones=["animated tada","animated flash","animated wobble","animated zoomIn","animated rotateIn","animated swing"];
 var numeroAnimacion=0;
 var volumen=true;
 var palabra=0;
 huevoPascuaPosicion=[];
-var huevoPascua="0_0,10_0,10_10,0_10"
+var huevoPascua="0_0,0_10,10_10,10_0"
 var cancion=true;
 
 
 iniciarJuego();
+
+// Función para recalcular dimensiones cuando cambia el tamaño de la ventana
+function recalcularDimensiones() {
+    alto = window.innerHeight;
+    ancho = window.innerWidth;
+    
+    // Si el tablero ya existe, recalcular su tamaño
+    if ($("#chess_board").length > 0) {
+        var headerHeight = $("header").outerHeight() || 85;
+        var availableHeight = alto - headerHeight - 20;
+        var availableWidth = ancho - 20;
+        
+        var cellSize = Math.min(
+            Math.floor(availableWidth / dimensiones),
+            Math.floor(availableHeight / dimensiones)
+        );
+        
+        cellSize = Math.max(cellSize, 20);
+        
+        var tableWidth = cellSize * dimensiones;
+        var tableHeight = cellSize * dimensiones;
+        var fontSize = Math.max(12, Math.min(35, Math.floor(cellSize * 0.4)));
+        
+        $("#chess_board").css({
+            "width": tableWidth + "px",
+            "height": tableHeight + "px",
+            "font-size": fontSize + "px",
+            "line-height": cellSize + "px"
+        });
+        
+        $("#chess_board td").css({
+            "width": cellSize + "px",
+            "height": cellSize + "px"
+        });
+    }
+}
+
+// Listener para redimensionamiento de ventana
+$(window).on('resize orientationchange', function() {
+    recalcularDimensiones();
+});
+
+// Variable global para el orden esperado del easter egg
+var ordenEsperado = ["0_0", "0_10", "10_10", "10_0"];
+
 
 function iniciarJuego () 
   {
@@ -78,20 +123,51 @@ function crearEscenario ()
         $("#escenario").html(txt);
 
 
+          // Recalcular dimensiones para asegurar que quepa en pantalla
+          var headerHeight = $("header").outerHeight() || 85;
+          var availableHeight = alto - headerHeight - 20; // 20px de margen
+          var availableWidth = ancho - 20; // 10px margen a cada lado
+          
+          // Calcular tamaño de celda basado en el espacio disponible
+          var cellSize = Math.min(
+              Math.floor(availableWidth / dimensiones),
+              Math.floor(availableHeight / dimensiones)
+          );
+          
+          // Asegurar tamaño mínimo de celda
+          cellSize = Math.max(cellSize, 20);
+          
+          var tableWidth = cellSize * dimensiones;
+          var tableHeight = cellSize * dimensiones;
+          
+          // Calcular tamaño de fuente responsive
+          var fontSize = Math.max(12, Math.min(35, Math.floor(cellSize * 0.4)));
+          
           $("#chess_board").css
                           ({
-                             "width"                : (ancho-20)+"px",
-                              "height"              : (alto-150 )+"px",
+                             "width"                : tableWidth + "px",
+                              "height"              : tableHeight + "px",
+                              "max-width"           : "100%",
+                              "max-height"           : availableHeight + "px",
                            // "border"              : "1px solid red",
                               "font-weight"         : "bold",
                               "font-family"         : "Arial",
-                              "line-height"         : 5+"px",
+                              "line-height"         : cellSize + "px",
                               "cursor"              : "pointer",
-                              "text-align"          :"center",
-                              "font-size"           : "35px",
-                              "margin-top"        :   "20px"
+                              "text-align"          : "center",
+                              "font-size"           : fontSize + "px",
+                              "margin"              : "10px auto",
+                              "display"             : "block"
                                
                          });
+          
+          // Ajustar tamaño de celdas
+          $("#chess_board td").css({
+              "width": cellSize + "px",
+              "height": cellSize + "px",
+              "padding": "0",
+              "box-sizing": "border-box"
+          });
 
         clickCelda();
         
@@ -147,10 +223,16 @@ function clickCelda ()
             {
              $("#" + i + "_" + c).click(function(event)
                 {
-                  if (event.toElement.innerHTML==objetivo) 
+                  var target = event.target || event.toElement || this;
+                  
+                  if (!target || !target.innerHTML) {
+                      return;
+                  }
+                  
+                  if (target.innerHTML==objetivo) 
                   {
-                        $("#"+event.toElement.id).removeClass();
-                        $("#"+event.toElement.id).addClass("animated rubberBand").css
+                        $("#"+target.id).removeClass();
+                        $("#"+target.id).addClass("animated rubberBand").css
                         ({
                              "color"              : 'white',
                              "background-color"   : "#268C9F",
@@ -158,8 +240,6 @@ function clickCelda ()
                              "border-radius"      : "15%"
                         });
                        
-                        //console.log(event);
-                             
                          objetivo++;
                         if (palabra!=huevoPascua) 
                         {
@@ -175,7 +255,7 @@ function clickCelda ()
                             };
                         };
 
-                        if (objetivo==7)
+                        if (objetivo==122)
                         {
                             swal({   
                                     title   : "!Felicitaciones!",   
@@ -184,59 +264,81 @@ function clickCelda ()
                                     timer   :  5000
                                 });
                             navigator.vibrate(3000);
-                            setTimeout("location.href='../loading/index.html'", 2000);
+                            setTimeout("location.href='loading/index.html'", 2000);
                         };
 
 
-                        $("#objetivo").html("<i class='fa fa-eye'></i> "+objetivo);
-
-    
-
-                        //Validacion Huevo de Pascua
-                        if (huevoPascuaPosicion.length==4) 
-                        {
-                            palabra=huevoPascuaPosicion.join();
-
-                            if (palabra==huevoPascua)
-                            {     
-                                  ayudas=999;
-
-                                  if (cancion) 
-                                    {
-                                      swal
-                                      ({   
-                                        title   : "!!Huevo de Pascua!!",   
-                                        text    : "Encontrado",
-                                        imageUrl: "imagenes/huevo.png" 
-                                      });
-                                      $("#ayuda").css('display', 'inline-block').show();
-                                      createjs.Sound.play("cancion",  { loop : "handleLoop" });
-                                      cancion=false;
-                                    };
-                                 
-                                  $("#"+event.toElement.id).addClass("animated rubberBand").css
-                                  ({
-                                      "color"              : 'white',
-                                      "background-color"   : randomColor(),
-                                      "font-weight"        : "bold",
-                                      "border-radius"      : "15%"
-                                  });
-                
-                                  $("header").css
-                                  ({
-                                      "background"     : randomColor(),
-                                      "border-bottom"  : "15px solid "+randomColor()
-                                  });
-
-
-                            };
-                        };
+                        $("#objetivo-numero").text(objetivo);
                   };
 
                    
-                   if (event.toElement.id==="0_0"||event.toElement.id==="10_0"||event.toElement.id=="10_10"||event.toElement.id==="0_10")
+                   // Detección y validación del Huevo de Pascua
+                   if (target && target.id && (target.id==="0_0"||target.id==="10_0"||target.id=="10_10"||target.id==="0_10"))
                       {
-                          huevoPascuaPosicion.push(event.toElement.id);
+                          // Verificar el orden esperado
+                          var siguienteEsperado = ordenEsperado[huevoPascuaPosicion.length];
+                          
+                          // Si es la siguiente esquina en el orden correcto, agregarla
+                          if (target.id === siguienteEsperado) {
+                              // Verificar que no esté duplicada (solo si ya tenemos al menos una)
+                              var esDuplicado = false;
+                              if (huevoPascuaPosicion.length > 0) {
+                                  for (var h = 0; h < huevoPascuaPosicion.length; h++) {
+                                      if (huevoPascuaPosicion[h] === target.id) {
+                                          esDuplicado = true;
+                                          break;
+                                      }
+                                  }
+                              }
+                              
+                              // Solo agregar si no es duplicado
+                              if (!esDuplicado) {
+                                  huevoPascuaPosicion.push(target.id);
+                                  
+                                  // Verificar si se completó la secuencia
+                                  if (huevoPascuaPosicion.length === 4) {
+                                      palabra = huevoPascuaPosicion.join();
+                                      
+                                      if (palabra === huevoPascua) {
+                                          ayudas = 999;
+                                          
+                                          // Actualizar visualmente el contador de ayudas inmediatamente
+                                          $("#ayuda-texto").text("x"+ayudas);
+                                          $("#ayuda").css('display', 'inline-block').show();
+                                          
+                                          if (cancion) {
+                                              swal({
+                                                  title: "!!Huevo de Pascua!!",
+                                                  text: "Encontrado",
+                                                  imageUrl: "imagenes/huevo.png"
+                                              });
+                                              createjs.Sound.play("cancion", { loop: "handleLoop" });
+                                              cancion = false;
+                                          };
+                                          
+                                          $("#" + target.id).addClass("animated rubberBand").css({
+                                              "color": 'white',
+                                              "background-color": randomColor(),
+                                              "font-weight": "bold",
+                                              "border-radius": "15%"
+                                          });
+                                          
+                                          $("header").css({
+                                              "background": randomColor(),
+                                              "border-bottom": "15px solid " + randomColor()
+                                          });
+                                      }
+                                  }
+                              }
+                          } else {
+                              // Si no es la siguiente esquina en orden, reiniciar el array
+                              // Pero si es la primera esquina (0_0), empezar de nuevo
+                              if (target.id === "0_0") {
+                                  huevoPascuaPosicion = ["0_0"];
+                              } else {
+                                  huevoPascuaPosicion = [];
+                              }
+                          }
                       };
  
                 });
@@ -267,7 +369,7 @@ $("#play").click(function(event)
             navigator.vibrate(1000);
           }
     
-        $("#tiempo").html("<div id = 'tiempo' > <i class='fa fa-clock-o fa-pulse'></i> "+cuentaTiempo+"'</div>");
+        $("#tiempo-texto").text(cuentaTiempo+"'");
       }, 1000);  
   });
 
@@ -303,11 +405,7 @@ $("#ayuda").click(function(event)
                       createjs.Sound.play("ayuda");
                     }; 
 
-                   $("#ayuda").html("<i class = 'fa fa-heart faa-pulse animated-hover '></i>"+"x"+ayudas).css
-                    ({
-                       "font-size": '4em',
-                       "font": 'normal normal normal FontAwesome'
-                    });
+                   $("#ayuda-texto").text("x"+ayudas);
               };
 
               if (ayudas===0) 
@@ -465,7 +563,7 @@ $("#info").click(function(event)
                                                                                                     swal
                                                                                                       ({   
                                                                                                           title               : "¿A quien apoyaras?",   
-                                                                                                          imageUrl            : "imagenes/Rivales.png",   
+                                                                                                          imageUrl            : "imagenes/rivales.png",   
                                                                                                           showCancelButton    : true,   
                                                                                                           confirmButtonColor  : "#DD6B55",   
                                                                                                           confirmButtonText   : "BATMAN",   
@@ -548,18 +646,6 @@ $("#info").click(function(event)
 
 
   
-$("#follow_me_twitter").click(function(event) 
-{
-  window.open('https://twitter.com/Luchooo_0','_blank');
-});
-
-$("#follow_me_facebook").click(function(event) 
-{
-
-    window.open('https://www.facebook.com/luis.unshodtech','_blank');
-  
-});
-
 $("#follow_me_github").click(function(event) 
 {
     window.open('https://github.com/Luchooo','_blank');
@@ -594,7 +680,7 @@ $("#salir").click(function(event)
                     showConfirmButton : false 
                 });
 
-                setTimeout("location.href='../loading/index.html'", 2000);
+                setTimeout("location.href='loading/index.html'", 2000);
             } 
             else 
               {  
@@ -612,14 +698,6 @@ $("#salir").click(function(event)
   });
 
 
-$("#share_facebook").click(function(event) 
-  {
-
-   window.open('https://www.facebook.com/luis.unshodtech');
-   window.open('https://github.com/Luchooo');
-   window.open('https://twitter.com/Luchooo_0');
-
-  });
 
 
 $("#volumen").click(function(event) 

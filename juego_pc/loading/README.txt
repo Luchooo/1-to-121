@@ -1,3 +1,0 @@
-A Pen created at CodePen.io. You can find this one at http://codepen.io/jotavejv/pen/ljLnv.
-
- Another loading animation effect...
