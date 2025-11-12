@@ -693,6 +693,12 @@ $(function () {
 		// dimensione con el header sin fijar y luego quede tapado.
 		mostrarOpciones();
 
+		// Si hay un selector de dificultad visible, aplicarlo antes de crear el tablero
+		if ($('#difficulty').length > 0) {
+			var selDim = $('#difficulty').val();
+			setDimensions(selDim);
+		}
+
 		// crear/actualizar tablero según la dimensión actual y preparar UI
 		crearEscenario();
 		llenarMatriz();
