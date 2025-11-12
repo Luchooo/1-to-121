@@ -24,8 +24,21 @@ $(function () {
 	var huevoPascua = '0_0,0_10,10_10,10_0';
 	var cancion = true;
 
-	// Flag para evitar múltiples intentos de desbloqueo
+	// Flags para control de audio
 	var audioUnlocked = false;
+	var soundsRegistered = false; // indica si ya se registraron los sonidos
+
+	// Asegura que los sonidos estén registrados y el audio desbloqueado.
+	function ensureAudioReady() {
+		// Registrar sonidos (esto puede crear el AudioContext, por eso lo hacemos dentro de
+		// un gesto del usuario)
+		if (!soundsRegistered) {
+			cargarSonidos();
+			soundsRegistered = true;
+		}
+		// Intentar reanudar el contexto y "despertar" el audio
+		unlockAudio();
+	}
 
 	// Intento de desbloquear audio en dispositivos que requieren interacción (iOS/Safari)
 	function unlockAudio() {
@@ -60,9 +73,52 @@ $(function () {
 		}
 	}
 
-	// Ejecutar unlockAudio en el primer gesto del usuario (touchstart o click)
+	// Ejecutar ensureAudioReady en el primer gesto del usuario (touchstart o click)
 	$(document).one('touchstart click', function () {
-		unlockAudio();
+		ensureAudioReady();
+	});
+
+	// Handlers for welcome overlay buttons
+	$(document).on('click', '#welcome-play', function (e) {
+		e.preventDefault();
+		try {
+			ensureAudioReady();
+		} catch (err) {}
+		// remove game-mode class when not playing
+		$('body').removeClass('game-mode');
+		// hide overlay then trigger play flow
+		$('#welcome').fadeOut(300, function () {
+			$('#play').click();
+		});
+	});
+
+	$(document).on('click', '#welcome-info', function (e) {
+		e.preventDefault();
+		// Show the same info modal as #info
+		$('#info').click();
+	});
+
+	$(document).on('click', '#welcome-sound', function (e) {
+		// add game-mode class to body to apply larger controls/layout while playing
+		$('body').addClass('game-mode');
+		e.preventDefault();
+		// Toggle volume and reflect icon
+		try {
+			ensureAudioReady();
+		} catch (err) {}
+		$('#volumen').click();
+		// sync icon on welcome button
+		setTimeout(function () {
+			if (createjs && createjs.Sound && createjs.Sound.muted) {
+				$('#welcome-sound .fa')
+					.removeClass('fa-volume-up')
+					.addClass('fa-volume-off');
+			} else {
+				$('#welcome-sound .fa')
+					.removeClass('fa-volume-off')
+					.addClass('fa-volume-up');
+			}
+		}, 50);
 	});
 
 	iniciarJuego();
@@ -113,7 +169,6 @@ $(function () {
 
 	function iniciarJuego() {
 		parametrosIniciales();
-		cargarSonidos();
 		crearEscenario();
 		llenarMatriz();
 	}
@@ -227,6 +282,12 @@ $(function () {
 			for (var c = 0; c < dimensiones; c++) {
 				$('#' + i + '_' + c).click(function (event) {
 					var target = event.target || event.toElement || this;
+					// Asegurar que el audio esté listo en el mismo gesto de usuario
+					try {
+						ensureAudioReady();
+					} catch (e) {
+						/* noop */
+					}
 
 					if (!target || !target.innerHTML) {
 						return;
@@ -351,6 +412,12 @@ $(function () {
 	}
 
 	$('#play').click(function (event) {
+		// asegurar audio listo cuando el usuario pulsa Play
+		try {
+			ensureAudioReady();
+		} catch (e) {
+			/* noop */
+		}
 		mostrarOpciones();
 		tiempo = setInterval(function () {
 			cuentaTiempo++;
@@ -369,6 +436,12 @@ $(function () {
 	});
 
 	$('#ayuda').click(function (event) {
+		// asegurar audio listo al usar ayuda
+		try {
+			ensureAudioReady();
+		} catch (e) {
+			/* noop */
+		}
 		ayudas--;
 
 		for (i = 0; i < matriz.length; i++) {
@@ -621,6 +694,12 @@ $(function () {
 	});
 
 	$('#salir').click(function (event) {
+		// asegurar audio listo al iniciar proceso de salir
+		try {
+			ensureAudioReady();
+		} catch (e) {
+			/* noop */
+		}
 		createjs.Sound.play('rana');
 		swal(
 			{

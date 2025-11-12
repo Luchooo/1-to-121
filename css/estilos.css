@@ -1,4 +1,4 @@
-@import url(http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300);
+@import url(https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300);
 
 * {
   box-sizing: border-box;
@@ -13,7 +13,8 @@ html, body {
 }
 
 body {
-  background-image: url("imagenes/fondo.png");
+  /* path corrected: CSS is inside css/ so images are in ../imagenes/ */
+  background-image: url("../imagenes/fondo.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -188,6 +189,156 @@ header{
   header .fa {
     font-size: 1.2em !important;
   }
+}
+
+/* Larger, more usable controls when playing */
+body.game-mode header {
+  min-height: 90px;
+  padding: 10px 0;
+  border-bottom-width: 10px;
+}
+
+body.game-mode header .play,
+body.game-mode header .tiempo,
+body.game-mode header .volumen,
+body.game-mode header .salir,
+body.game-mode header .objetivo,
+body.game-mode header .ayuda,
+body.game-mode header .info,
+body.game-mode header .follow_me_github {
+  margin: 8px 3%;
+}
+
+body.game-mode header .fa {
+  font-size: 2.2em !important;
+}
+
+body.game-mode .objetivo {
+  font-size: 40px;
+}
+
+/* Make header items distribute evenly and be easier to tap */
+body.game-mode header {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+/* Give the board more horizontal room on mobile by reducing margins */
+@media screen and (max-width: 480px) {
+  body.game-mode #escenario { padding: 6px 4px; }
+  body.game-mode #chess_board { margin: 6px auto; }
+}
+
+/* Better stacked header controls for very small screens when playing */
+@media screen and (max-width: 420px) {
+  body.game-mode header {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 120px;
+    padding: 10px 6px;
+    z-index: 20;
+  }
+
+  /* Make each control take a full row to improve tap targets */
+  body.game-mode header .play,
+  body.game-mode header .tiempo,
+  body.game-mode header .volumen,
+  body.game-mode header .salir,
+  body.game-mode header .objetivo,
+  body.game-mode header .ayuda,
+  body.game-mode header .info,
+  body.game-mode header .follow_me_github {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    margin: 6px 0 !important;
+    padding: 6px 0;
+  }
+
+  body.game-mode header .fa {
+    font-size: 1.9em !important;
+  }
+
+  body.game-mode .objetivo {
+    font-size: 28px;
+  }
+
+  /* ensure board is pushed below header so controls are reachable */
+  body.game-mode #escenario { margin-top: 6px; padding-top: 8px; }
+}
+
+/* Welcome overlay styles */
+.welcome-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10,10,10,0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.welcome-card {
+  width: min(560px, 92%);
+  background: rgba(255,255,255,0.98);
+  border-radius: 14px;
+  padding: 26px;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.45);
+}
+.welcome-title {
+  margin: 0 0 6px 0;
+  font-size: 42px;
+  letter-spacing: 2px;
+  color: #268C9F;
+  font-weight: 700;
+}
+.welcome-sub {
+  margin: 0 0 18px 0;
+  color: #444;
+}
+.welcome-controls {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.welcome-btn {
+  border: none;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  min-width: 120px;
+  box-shadow: 0 6px 14px rgba(38,140,159,0.18);
+}
+.play-btn {
+  background: linear-gradient(180deg,#2bb1c0,#1f8b97);
+  color: #fff;
+  font-size: 18px;
+}
+.info-btn {
+  background: linear-gradient(180deg,#f3f3f3,#e6e6e6);
+  color: #333;
+  font-size: 14px;
+}
+.sound-btn {
+  background: linear-gradient(180deg,#fff,#ddd);
+  color: #333;
+  font-size: 18px;
+}
+.welcome-footer {
+  font-size: 13px;
+  color: #666;
+  margin-top: 6px;
+}
+
+@media screen and (max-width: 480px) {
+  .welcome-card { padding: 18px; }
+  .welcome-title { font-size: 28px; }
+  .welcome-btn { min-width: 100px; padding: 10px 12px; }
 }
 
 
