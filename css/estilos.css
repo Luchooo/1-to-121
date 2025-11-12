@@ -155,11 +155,6 @@ header{
   header .fa {
     font-size: 1.2em !important;
   }
-  
-  /* Ocultar algunos elementos menos importantes durante el juego */
-  #info {
-    display: none !important;
-  }
 }
 
 /* Pantallas muy pequeñas */
