@@ -496,10 +496,35 @@ $(function () {
 		} catch (e) {
 			/* noop */
 		}
-		ayudas--;
+		// si las ayudas son infinitas (e.g. huevo de pascua -> 999), permitir
+		if (ayudas !== 999) {
+			// evitar que baje por debajo de 0
+			if (ayudas <= 0) {
+				ayudas = 0;
+				$('#ayuda-texto').text('x' + ayudas);
+				$('#ayuda').hide();
+				swal({
+					title: '!OOOPPPS!',
+					text: 'Se han acabado las ayudas.',
+					showCancelButton: false,
+					confirmButtonColor: '#DD6B55',
+					confirmButtonText: 'Aceptar',
+					closeOnConfirm: false,
+					timer: 5000,
+					imageUrl: 'imagenes/sad.png',
+				});
+				navigator.vibrate(1000);
+				return; // no hay ayudas, salir
+			}
 
-		for (i = 0; i < matriz.length; i++) {
-			for (e = 0; e < matriz.length; e++) {
+			// consumir una ayuda
+			ayudas--;
+		}
+
+		// aplicar la ayuda: buscar la celda con el objetivo y resaltarla (solo una vez)
+		var encontrada = false;
+		for (var i = 0; i < matriz.length && !encontrada; i++) {
+			for (var e = 0; e < matriz.length && !encontrada; e++) {
 				if ($('#' + i + '_' + e).html() == objetivo) {
 					$('#' + i + '_' + e).removeClass();
 					$('#' + i + '_' + e)
@@ -521,24 +546,25 @@ $(function () {
 					}
 
 					$('#ayuda-texto').text('x' + ayudas);
-				}
-
-				if (ayudas === 0) {
-					$('#ayuda').hide();
-					swal({
-						title: '!OOOPPPS!',
-						text: 'Se han acabado las ayudas.',
-						showCancelButton: false,
-						confirmButtonColor: '#DD6B55',
-						confirmButtonText: 'Aceptar',
-						closeOnConfirm: false,
-						timer: 5000,
-						imageUrl: 'imagenes/sad.png',
-					});
-
-					navigator.vibrate(1000);
+					encontrada = true;
 				}
 			}
+		}
+
+		// si tras consumir la ayuda nos quedamos en 0, ocultar y avisar
+		if (ayudas === 0) {
+			$('#ayuda').hide();
+			swal({
+				title: '!OOOPPPS!',
+				text: 'Se han acabado las ayudas.',
+				showCancelButton: false,
+				confirmButtonColor: '#DD6B55',
+				confirmButtonText: 'Aceptar',
+				closeOnConfirm: false,
+				timer: 5000,
+				imageUrl: 'imagenes/sad.png',
+			});
+			navigator.vibrate(1000);
 		}
 	});
 

@@ -3,6 +3,23 @@
 * {
   box-sizing: border-box;
 }
+/* Extra padding for very large screens so the game grid doesn't stretch edge-to-edge */
+@media screen and (min-width: 901px) {
+  /* add horizontal padding to the escenario to center the board visually */
+  #escenario {
+    padding: 80px;
+  }
+
+  /* limit the chess board width and center it */
+  #chess_board {
+    margin: 0 auto;
+    max-width: 880px;
+    width: 100%;
+    background: rgba(255,255,255,0.65);
+    padding: 12px;
+    border-radius: 8px;
+  }
+}
 
 html, body {
   margin: 0;
@@ -304,7 +321,6 @@ body.game-mode header {
   font-weight: 700;
 }
 
-@media screen and (max-width: 420px) {
   /* bottom-bar is only visible while in game-mode on small screens */
   .bottom-bar { display: none; }
 
@@ -366,7 +382,7 @@ body.game-mode header {
 
   /* bottom-bar visible only in game-mode on small screens */
   body.game-mode .bottom-bar { display: flex; }
-}
+
 
 /* Hide bottom bar and header controls when welcome overlay is active */
 body.welcome-active .bottom-bar { display: none !important; }
@@ -376,72 +392,7 @@ body.welcome-active header .salir,
 body.welcome-active header .info,
 body.welcome-active header .follow_me_github { display: none !important; }
 
-/* Desktop / large screens: show full header controls when playing */
-@media screen and (min-width: 421px) {
-  body.game-mode header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 74px;
-    padding: 10px 24px;
-    background: linear-gradient(180deg,#2e9aaa,#1f7f88);
-    border-bottom: 10px solid #2f4960;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
-    position: relative; /* allow centering the objetivo */
-  }
 
-  body.game-mode header .tiempo,
-  body.game-mode header .volumen,
-  body.game-mode header .objetivo,
-  body.game-mode header .ayuda,
-  body.game-mode header .salir {
-    display: inline-flex !important;
-    align-items: center;
-    gap: 10px;
-    margin: 0 12px;
-    color: #fff;
-  }
-
-  body.game-mode header .fa {
-    font-size: 1.8em !important;
-    color: #fff;
-  }
-
-  /* Emphasize time and keep ayudas visible */
-  body.game-mode #tiempo { font-size: 1.3em; font-weight: 800; }
-  body.game-mode #ayuda { font-size: 1.0em; font-weight: 700; }
-  
-  /* Layout: left controls, centered objetivo, right controls */
-  /* Left group: play, tiempo, volumen */
-  #play, #tiempo, #volumen { order: 1; }
-  /* Center objetivo should be centered absolutely */
-  #objetivo { order: 2; position: absolute; left: 50%; transform: translateX(-50%); display:flex; align-items:center; gap:8px; max-width:260px; }
-  #objetivo .fa { font-size: 2.2em !important; }
-  #objetivo span { font-size: 1.6em; font-weight: 900; color: #fff; margin-left: 6px; }
-  /* Right group: salir, ayuda */
-  #salir, #ayuda { order: 3; }
-
-  /* Make left and right groups align nicely */
-  #tiempo, #volumen, #salir, #ayuda { display: inline-flex; align-items:center; gap:6px; margin: 0 8px; }
-
-  /* Hover effects to make UI feel interactive */
-  header .play:hover,
-  header .volumen:hover,
-  header .salir:hover,
-  header .ayuda:hover,
-  header .info:hover,
-  header .follow_me_github:hover {
-    transform: translateY(-2px);
-    transition: transform 160ms ease;
-    filter: brightness(1.06);
-    cursor: pointer;
-  }
-
-  /* Ensure objetivo doesn't overlap controls on very narrow large viewports */
-  @media (max-width: 900px) {
-    #objetivo { position: relative; transform: none; margin: 0 auto; }
-  }
-}
 
 /* Welcome overlay styles */
 .welcome-overlay {
