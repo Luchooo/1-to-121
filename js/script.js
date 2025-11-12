@@ -21,8 +21,39 @@ $(function () {
 	var volumen = true;
 	var palabra = 0;
 	huevoPascuaPosicion = [];
-	var huevoPascua = '0_0,0_10,10_10,10_0';
+	// El valor real de `huevoPascua` (la secuencia de esquinas) se calcula
+	// dinámicamente en `setDimensions()` para soportar tamaños de cuadrícula
+	// distintos a 11x11.
+	var huevoPascua = '';
 	var cancion = true;
+
+	// timer handle
+	var tiempo = null;
+
+	// Helper to set grid dimensions and reset related variables (no UI creation)
+	function setDimensions(n) {
+		dimensiones = Number(n) || 11;
+		total_numeros = dimensiones * dimensiones;
+		// recreate matriz structure
+		matriz = [];
+		for (var i = 0; i < dimensiones; i++) {
+			matriz[i] = [];
+		}
+		// reset objetivo and ayudas to defaults
+		objetivo = 1;
+		ayudas = 6;
+		$('#objetivo-numero').text(objetivo);
+		$('#ayuda-texto').text('x' + ayudas);
+		// reset egg tracking
+		huevoPascuaPosicion = [];
+		palabra = 0;
+		// actualizar orden esperado para el huevo de pascua según dimensiones
+		var last = dimensiones - 1;
+		ordenEsperado = ['0_0', '0_' + last, last + '_' + last, last + '_0'];
+		// también actualizamos la representación en cadena que se usa para
+		// comparar la secuencia encontrada (palabra)
+		huevoPascua = ordenEsperado.join();
+	}
 
 	// Flags para control de audio
 	var audioUnlocked = false;
@@ -87,6 +118,10 @@ $(function () {
 		try {
 			ensureAudioReady();
 		} catch (err) {}
+		// read difficulty selection and apply
+		var sel = $('#difficulty').val();
+		setDimensions(sel);
+
 		// remove welcome-active state and start the game
 		$('body').removeClass('welcome-active');
 		// hide overlay then trigger play flow
@@ -175,7 +210,10 @@ $(function () {
 	setInterval(syncBottomObjective, 500);
 	setInterval(syncBottomVolumeIcon, 800);
 
-	iniciarJuego();
+	// initialize UI state and defaults but do NOT create the board until Play
+	parametrosIniciales();
+	// set default dimensions in memory (11x11) but don't create UI yet
+	setDimensions(dimensiones);
 
 	// Función para recalcular dimensiones cuando cambia el tamaño de la ventana
 	function recalcularDimensiones() {
@@ -185,7 +223,11 @@ $(function () {
 		// Si el tablero ya existe, recalcular su tamaño
 		if ($('#chess_board').length > 0) {
 			var headerHeight = $('header').outerHeight() || 85;
-			var availableHeight = alto - headerHeight - 20;
+			// restar la altura de la bottom-bar si está visible (en mobile game-mode)
+			var bottomBarHeight = $('.bottom-bar').is(':visible')
+				? $('.bottom-bar').outerHeight()
+				: 0;
+			var availableHeight = alto - headerHeight - bottomBarHeight - 20;
 			var availableWidth = ancho - 20;
 
 			// Cuando el ancho es mayor a 927px, priorizamos el cálculo por ancho
@@ -241,18 +283,18 @@ $(function () {
 	}
 
 	function llenarMatriz() {
-		do {
-			for (var i = 0; i < matriz.length; i++) {
-				for (e = 0; e < matriz.length; e++) {
-					matriz[i][e] = aleatorio(total_numeros);
-				}
+		// reset used numbers and fill matrix with unique numbers from 1..total_numeros
+		usados = [];
+		for (var i = 0; i < dimensiones; i++) {
+			for (var e = 0; e < dimensiones; e++) {
+				matriz[i][e] = aleatorio(total_numeros);
 			}
-		} while (matriz.length === 12);
+		}
 
-		for (i = 0; i < matriz.length; i++) {
-			for (e = 0; e < matriz.length; e++) {
-				$('#' + i + '_' + e)
-					.html(matriz[i][e])
+		for (var i2 = 0; i2 < dimensiones; i2++) {
+			for (var e2 = 0; e2 < dimensiones; e2++) {
+				$('#' + i2 + '_' + e2)
+					.html(matriz[i2][e2])
 					.css('color', randomColor());
 			}
 		}
@@ -274,7 +316,10 @@ $(function () {
 
 		// Recalcular dimensiones para asegurar que quepa en pantalla
 		var headerHeight = $('header').outerHeight() || 85;
-		var availableHeight = alto - headerHeight - 20; // 20px de margen
+		var bottomBarHeight = $('.bottom-bar').is(':visible')
+			? $('.bottom-bar').outerHeight()
+			: 0;
+		var availableHeight = alto - headerHeight - bottomBarHeight - 20; // 20px de margen
 		var availableWidth = ancho - 20; // 10px margen a cada lado
 
 		// Calcular tamaño de celda basado en el espacio disponible
@@ -361,133 +406,109 @@ $(function () {
 	function clickCelda() {
 		for (var i = 0; i < dimensiones; i++) {
 			for (var c = 0; c < dimensiones; c++) {
-				$('#' + i + '_' + c).click(function (event) {
-					var target = event.target || event.toElement || this;
-					// Asegurar que el audio esté listo en el mismo gesto de usuario
-					try {
-						ensureAudioReady();
-					} catch (e) {
-						/* noop */
-					}
+				(function (ii, cc) {
+					$('#' + ii + '_' + cc)
+						.off('click')
+						.on('click', function (event) {
+							var target = event.target || event.toElement || this;
+							try {
+								ensureAudioReady();
+							} catch (e) {}
 
-					if (!target || !target.innerHTML) {
-						return;
-					}
+							if (!target || !target.innerHTML) return;
 
-					if (target.innerHTML == objetivo) {
-						$('#' + target.id).removeClass();
-						$('#' + target.id)
-							.addClass('animated rubberBand')
-							.css({
-								color: 'white',
-								'background-color': '#268C9F',
-								'font-weight': 'bold',
-								'border-radius': '15%',
-							});
+							// Selección correcta
+							if (target.innerHTML == objetivo) {
+								$('#' + target.id).removeClass();
+								$('#' + target.id)
+									.addClass('animated rubberBand')
+									.css({
+										color: 'white',
+										'background-color': '#268C9F',
+										'font-weight': 'bold',
+										'border-radius': '15%',
+									});
 
-						objetivo++;
-						if (palabra != huevoPascua) {
-							createjs.Sound.play('encontro_numero');
-						}
-
-						if (objetivo % 10 === 0) {
-							if (palabra != huevoPascua) {
-								createjs.Sound.play('ouh_yeah');
-								navigator.vibrate(500);
-							}
-						}
-
-						if (objetivo == 122) {
-							swal({
-								title: '!Felicitaciones!',
-								text: 'Lo haz conseguido en ' + cuentaTiempo + ' segundos',
-								imageUrl: 'imagenes/like.png',
-								timer: 5000,
-							});
-							navigator.vibrate(3000);
-							setTimeout("location.href='loading/index.html'", 2000);
-						}
-
-						$('#objetivo-numero').text(objetivo);
-					}
-
-					// Detección y validación del Huevo de Pascua
-					if (
-						target &&
-						target.id &&
-						(target.id === '0_0' ||
-							target.id === '10_0' ||
-							target.id == '10_10' ||
-							target.id === '0_10')
-					) {
-						// Verificar el orden esperado
-						var siguienteEsperado = ordenEsperado[huevoPascuaPosicion.length];
-
-						// Si es la siguiente esquina en el orden correcto, agregarla
-						if (target.id === siguienteEsperado) {
-							// Verificar que no esté duplicada (solo si ya tenemos al menos una)
-							var esDuplicado = false;
-							if (huevoPascuaPosicion.length > 0) {
-								for (var h = 0; h < huevoPascuaPosicion.length; h++) {
-									if (huevoPascuaPosicion[h] === target.id) {
-										esDuplicado = true;
-										break;
-									}
+								objetivo++;
+								if (palabra != huevoPascua)
+									createjs.Sound.play('encontro_numero');
+								if (objetivo % 10 === 0 && palabra != huevoPascua) {
+									createjs.Sound.play('ouh_yeah');
+									navigator.vibrate(500);
 								}
+
+								if (objetivo == total_numeros + 1) {
+									swal({
+										title: '!Felicitaciones!',
+										text: 'Lo haz conseguido en ' + cuentaTiempo + ' segundos',
+										imageUrl: 'imagenes/like.png',
+										timer: 5000,
+									});
+									navigator.vibrate(3000);
+									setTimeout("location.href='loading/index.html'", 2000);
+								}
+
+								$('#objetivo-numero').text(objetivo);
 							}
 
-							// Solo agregar si no es duplicado
-							if (!esDuplicado) {
-								huevoPascuaPosicion.push(target.id);
-
-								// Verificar si se completó la secuencia
-								if (huevoPascuaPosicion.length === 4) {
-									palabra = huevoPascuaPosicion.join();
-
-									if (palabra === huevoPascua) {
-										ayudas = 999;
-
-										// Actualizar visualmente el contador de ayudas inmediatamente
-										$('#ayuda-texto').text('x' + ayudas);
-										$('#ayuda').css('display', 'inline-block').show();
-
-										if (cancion) {
-											swal({
-												title: '!!Huevo de Pascua!!',
-												text: 'Encontrado',
-												imageUrl: 'imagenes/huevo.png',
-											});
-											createjs.Sound.play('cancion', { loop: 'handleLoop' });
-											cancion = false;
+							// Detección del Huevo de Pascua (esquinas, adaptativo a dimensiones)
+							if (target && target.id) {
+								var last = dimensiones - 1;
+								var corners = [
+									'0_0',
+									'0_' + last,
+									last + '_' + last,
+									last + '_0',
+								];
+								if (corners.indexOf(target.id) !== -1) {
+									var siguienteEsperado =
+										ordenEsperado[huevoPascuaPosicion.length];
+									if (target.id === siguienteEsperado) {
+										if (huevoPascuaPosicion.indexOf(target.id) === -1) {
+											huevoPascuaPosicion.push(target.id);
+											if (huevoPascuaPosicion.length === 4) {
+												palabra = huevoPascuaPosicion.join();
+												if (palabra === huevoPascua) {
+													ayudas = 999;
+													$('#ayuda-texto').text('x' + ayudas);
+													$('#ayuda').css('display', 'inline-block').show();
+													if (cancion) {
+														swal({
+															title: '!!Huevo de Pascua!!',
+															text: 'Encontrado',
+															imageUrl: 'imagenes/huevo.png',
+														});
+														createjs.Sound.play('cancion', {
+															loop: 'handleLoop',
+														});
+														cancion = false;
+													}
+													$('#' + target.id)
+														.addClass('animated rubberBand')
+														.css({
+															color: 'white',
+															'background-color': randomColor(),
+															'font-weight': 'bold',
+															'border-radius': '15%',
+														});
+													$('header').css({
+														background: randomColor(),
+														'border-bottom': '15px solid ' + randomColor(),
+													});
+												}
+											}
 										}
-
-										$('#' + target.id)
-											.addClass('animated rubberBand')
-											.css({
-												color: 'white',
-												'background-color': randomColor(),
-												'font-weight': 'bold',
-												'border-radius': '15%',
-											});
-
-										$('header').css({
-											background: randomColor(),
-											'border-bottom': '15px solid ' + randomColor(),
-										});
+									} else {
+										if (target.id === '0_0') {
+											huevoPascuaPosicion = ['0_0'];
+										} else {
+											huevoPascuaPosicion = [];
+										}
 									}
 								}
 							}
-						} else {
-							// Si no es la siguiente esquina en orden, reiniciar el array
-							// Pero si es la primera esquina (0_0), empezar de nuevo
-							if (target.id === '0_0') {
-								huevoPascuaPosicion = ['0_0'];
-							} else {
-								huevoPascuaPosicion = [];
-							}
-						}
-					}
-				});
+						});
+				})(i, c);
 			}
 		}
 	}
@@ -499,7 +520,27 @@ $(function () {
 		} catch (e) {
 			/* noop */
 		}
+
+		// prevent duplicate timers if Play is pressed multiple times
+		if (tiempo) {
+			clearInterval(tiempo);
+			tiempo = null;
+		}
+
+		// Mostrar las opciones/estado de juego primero para que las clases y
+		// estilos (header fijo, padding, bottom-bar) estén presentes antes de
+		// crear el tablero y calcular tamaños. Esto evita que el tablero se
+		// dimensione con el header sin fijar y luego quede tapado.
 		mostrarOpciones();
+
+		// crear/actualizar tablero según la dimensión actual y preparar UI
+		crearEscenario();
+		llenarMatriz();
+		recalcularDimensiones();
+
+		// reset timer counter
+		cuentaTiempo = 0;
+
 		tiempo = setInterval(function () {
 			cuentaTiempo++;
 			if (cuentaTiempo % 20 === 0) {
