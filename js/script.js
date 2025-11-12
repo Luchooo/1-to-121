@@ -438,6 +438,11 @@ $(function () {
 								}
 
 								if (objetivo == total_numeros + 1) {
+									// Pausar el contador al ganar
+									if (tiempo) {
+										clearInterval(tiempo);
+										tiempo = null;
+									}
 									// Mostrar modal de victoria con opciones para compartir o reiniciar.
 									var timeText =
 										'Lo haz conseguido en ' + cuentaTiempo + ' segundos';
@@ -448,8 +453,6 @@ $(function () {
 										'</p>' +
 										'<img src="imagenes/like.png" style="width:96px;height:96px;margin:8px 0;"/>' +
 										'<div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">' +
-										'<button id="share-browser" class="swal-btn" style="padding:8px 12px;border-radius:8px;border:0;background:#2bb1c0;color:#fff;">Compartir (navegador)</button>' +
-										'<button id="share-whatsapp" class="swal-btn" style="padding:8px 12px;border-radius:8px;border:0;background:#25D366;color:#fff;">Compartir WhatsApp</button>' +
 										'<button id="share-screenshot" class="swal-btn" style="padding:8px 12px;border-radius:8px;border:0;background:#6b5b95;color:#fff;">Compartir con imagen</button>' +
 										'<button id="restart-game" class="swal-btn" style="padding:8px 12px;border-radius:8px;border:0;background:#DD6B55;color:#fff;">Reiniciar</button>' +
 										'</div></div>';
@@ -478,47 +481,59 @@ $(function () {
 										document.head.appendChild(s);
 									}
 
-									// Share text via Web Share API or fallback copy
-									function shareText(text, url) {
-										if (navigator.share) {
-											navigator
-												.share({ title: '1-to-121', text: text, url: url })
-												.catch(function (e) {});
-										} else {
-											// fallback: open share via dialog to copy or WhatsApp
-											var copy = document.createElement('textarea');
-											copy.value = text + (url ? '\n' + url : '');
-											document.body.appendChild(copy);
-											copy.select();
-											document.execCommand('copy');
-											document.body.removeChild(copy);
-											alert('Texto copiado al portapapeles: ' + text);
-										}
-									}
-
-									// Share via WhatsApp
-									function shareWhatsApp(text) {
-										var url =
-											'https://api.whatsapp.com/send?text=' +
-											encodeURIComponent(
-												text + '\nhttps://1-to-121.vercel.app'
-											);
-										window.open(url, '_blank');
-									}
-
-									// Share screenshot using html2canvas and Web Share API (if supports files)
+									// Share screenshot using html2canvas and Web Share API (if supports files).
+									// We'll render a temporary container that includes header + escenario
+									// so the time in the header appears in the captured image.
 									function shareScreenshot(text) {
 										loadHtml2Canvas(function (err) {
 											if (err) {
-												// fallback to share text only
-												return shareText(text, 'https://1-to-121.vercel.app');
+												alert(
+													'No fue posible generar la imagen. Intenta compartir el texto en su lugar.'
+												);
+												return;
 											}
-											var target =
-												document.querySelector('#escenario') || document.body;
+
+											// Crear un contenedor temporal que contenga una copia del header y del escenario
+											var temp = document.createElement('div');
+											temp.style.position = 'absolute';
+											temp.style.left = '-9999px';
+											temp.style.top = '0';
+											temp.style.background =
+												window.getComputedStyle(document.body).background ||
+												'#fff';
+											temp.style.padding = '10px';
+											temp.style.boxSizing = 'border-box';
+
+											// clonar header
+											var header = document.querySelector('header');
+											if (header) {
+												var headerClone = header.cloneNode(true);
+												// asegurar que el texto esté legible en la imagen
+												headerClone.style.width = '720px';
+												headerClone.style.display = 'block';
+												temp.appendChild(headerClone);
+											}
+
+											// clonar escenario
+											var escenario = document.querySelector('#escenario');
+											if (escenario) {
+												var escClone = escenario.cloneNode(true);
+												escClone.style.display = 'block';
+												escClone.style.marginTop = '8px';
+												temp.appendChild(escClone);
+											}
+
+											document.body.appendChild(temp);
+
 											window
-												.html2canvas(target, { scale: 1 })
+												.html2canvas(temp, { scale: 1 })
 												.then(function (canvas) {
 													canvas.toBlob(function (blob) {
+														// limpiar el contenedor temporal
+														setTimeout(function () {
+															document.body.removeChild(temp);
+														}, 50);
+
 														var file = new File([blob], '1-to-121-score.png', {
 															type: 'image/png',
 														});
@@ -533,16 +548,21 @@ $(function () {
 																	text: text,
 																})
 																.catch(function (e) {
-																	// fallback to opening image in new tab
 																	var url = URL.createObjectURL(blob);
 																	window.open(url, '_blank');
 																});
 														} else {
-															// no file-sharing support: open image in new tab so user can save/share manually
 															var url = URL.createObjectURL(blob);
 															window.open(url, '_blank');
 														}
 													});
+												})
+												.catch(function (e) {
+													// limpiar el contenedor temporal en caso de error
+													try {
+														document.body.removeChild(temp);
+													} catch (ignored) {}
+													alert('Error generando la imagen: ' + e);
 												});
 										});
 									}
