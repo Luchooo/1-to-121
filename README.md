@@ -3,6 +3,8 @@
 ![Version](https://img.shields.io/badge/version-1.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Desktop-lightgrey.svg)
 
+- Demo: [Demo](https://1-to-121.vercel.app/)
+
 Un juego web interactivo donde debes encontrar los números del 1 al 121 en orden dentro de una cuadrícula de 11x11. ¡Pon a prueba tu velocidad y concentración!
 
 ## 📋 Descripción
