@@ -188,10 +188,23 @@ $(function () {
 			var availableHeight = alto - headerHeight - 20;
 			var availableWidth = ancho - 20;
 
-			var cellSize = Math.min(
-				Math.floor(availableWidth / dimensiones),
-				Math.floor(availableHeight / dimensiones)
-			);
+			// Cuando el ancho es mayor a 927px, priorizamos el cálculo por ancho
+			// para que la grilla mantenga proporción basada en el ancho de la ventana.
+			// Aún así, aplicamos un mínimo razonable para evitar celdas demasiado pequeñas.
+			var cellSizeByWidth = Math.floor(availableWidth / dimensiones);
+			var cellSizeByHeight = Math.floor(availableHeight / dimensiones);
+			var cellSize;
+			if (ancho > 927) {
+				cellSize = cellSizeByWidth;
+			} else {
+				cellSize = Math.min(cellSizeByWidth, cellSizeByHeight);
+			}
+
+			// Limitar tamaño máximo del tablero para evitar que crezca demasiado en pantallas muy anchas
+			var MAX_TABLE_WIDTH = 880; // coincide con el CSS para pantallas grandes
+			if (cellSize * dimensiones > MAX_TABLE_WIDTH) {
+				cellSize = Math.floor(MAX_TABLE_WIDTH / dimensiones);
+			}
 
 			cellSize = Math.max(cellSize, 20);
 
@@ -265,10 +278,21 @@ $(function () {
 		var availableWidth = ancho - 20; // 10px margen a cada lado
 
 		// Calcular tamaño de celda basado en el espacio disponible
-		var cellSize = Math.min(
-			Math.floor(availableWidth / dimensiones),
-			Math.floor(availableHeight / dimensiones)
-		);
+		var cellSizeByWidth = Math.floor(availableWidth / dimensiones);
+		var cellSizeByHeight = Math.floor(availableHeight / dimensiones);
+		var cellSize;
+		// Priorizar ancho en pantallas anchas para mantener proporción del tablero
+		if (ancho > 927) {
+			cellSize = cellSizeByWidth;
+		} else {
+			cellSize = Math.min(cellSizeByWidth, cellSizeByHeight);
+		}
+
+		// Limitar tamaño máximo del tablero para evitar que crezca demasiado en pantallas muy anchas
+		var MAX_TABLE_WIDTH = 880; // coincide con el CSS para pantallas grandes
+		if (cellSize * dimensiones > MAX_TABLE_WIDTH) {
+			cellSize = Math.floor(MAX_TABLE_WIDTH / dimensiones);
+		}
 
 		// Asegurar tamaño mínimo de celda
 		cellSize = Math.max(cellSize, 20);
@@ -283,7 +307,10 @@ $(function () {
 			width: tableWidth + 'px',
 			height: tableHeight + 'px',
 			'max-width': '100%',
-			'max-height': availableHeight + 'px',
+			// cuando priorizamos el ancho, permitimos que el alto se ajuste para
+			// mantener la proporción; max-height se mantiene para evitar desbordes
+			// extremos en pantallas muy pequeñas
+			'max-height': Math.max(availableHeight, tableHeight) + 'px',
 			// "border"              : "1px solid red",
 			'font-weight': 'bold',
 			'font-family': 'Arial',
