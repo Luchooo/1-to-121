@@ -438,14 +438,154 @@ $(function () {
 								}
 
 								if (objetivo == total_numeros + 1) {
+									// Mostrar modal de victoria con opciones para compartir o reiniciar.
+									var timeText =
+										'Lo haz conseguido en ' + cuentaTiempo + ' segundos';
+									var content =
+										'<div style="text-align:center;">' +
+										'<p style="font-size:16px;margin:8px 0;">' +
+										timeText +
+										'</p>' +
+										'<img src="imagenes/like.png" style="width:96px;height:96px;margin:8px 0;"/>' +
+										'<div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">' +
+										'<button id="share-browser" class="swal-btn" style="padding:8px 12px;border-radius:8px;border:0;background:#2bb1c0;color:#fff;">Compartir (navegador)</button>' +
+										'<button id="share-whatsapp" class="swal-btn" style="padding:8px 12px;border-radius:8px;border:0;background:#25D366;color:#fff;">Compartir WhatsApp</button>' +
+										'<button id="share-screenshot" class="swal-btn" style="padding:8px 12px;border-radius:8px;border:0;background:#6b5b95;color:#fff;">Compartir con imagen</button>' +
+										'<button id="restart-game" class="swal-btn" style="padding:8px 12px;border-radius:8px;border:0;background:#DD6B55;color:#fff;">Reiniciar</button>' +
+										'</div></div>';
+
 									swal({
 										title: '!Felicitaciones!',
-										text: 'Lo haz conseguido en ' + cuentaTiempo + ' segundos',
-										imageUrl: 'imagenes/like.png',
-										timer: 5000,
+										text: content,
+										html: true,
+										showConfirmButton: false,
 									});
-									navigator.vibrate(3000);
-									setTimeout("location.href='loading/index.html'", 2000);
+
+									navigator.vibrate && navigator.vibrate(300);
+
+									// Helper: cargar html2canvas si hace falta
+									function loadHtml2Canvas(cb) {
+										if (window.html2canvas) return cb();
+										var s = document.createElement('script');
+										s.src =
+											'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+										s.onload = function () {
+											cb();
+										};
+										s.onerror = function () {
+											cb(new Error('failed to load html2canvas'));
+										};
+										document.head.appendChild(s);
+									}
+
+									// Share text via Web Share API or fallback copy
+									function shareText(text, url) {
+										if (navigator.share) {
+											navigator
+												.share({ title: '1-to-121', text: text, url: url })
+												.catch(function (e) {});
+										} else {
+											// fallback: open share via dialog to copy or WhatsApp
+											var copy = document.createElement('textarea');
+											copy.value = text + (url ? '\n' + url : '');
+											document.body.appendChild(copy);
+											copy.select();
+											document.execCommand('copy');
+											document.body.removeChild(copy);
+											alert('Texto copiado al portapapeles: ' + text);
+										}
+									}
+
+									// Share via WhatsApp
+									function shareWhatsApp(text) {
+										var url =
+											'https://api.whatsapp.com/send?text=' +
+											encodeURIComponent(
+												text + '\nhttps://1-to-121.vercel.app'
+											);
+										window.open(url, '_blank');
+									}
+
+									// Share screenshot using html2canvas and Web Share API (if supports files)
+									function shareScreenshot(text) {
+										loadHtml2Canvas(function (err) {
+											if (err) {
+												// fallback to share text only
+												return shareText(text, 'https://1-to-121.vercel.app');
+											}
+											var target =
+												document.querySelector('#escenario') || document.body;
+											window
+												.html2canvas(target, { scale: 1 })
+												.then(function (canvas) {
+													canvas.toBlob(function (blob) {
+														var file = new File([blob], '1-to-121-score.png', {
+															type: 'image/png',
+														});
+														if (
+															navigator.canShare &&
+															navigator.canShare({ files: [file] })
+														) {
+															navigator
+																.share({
+																	files: [file],
+																	title: '1-to-121',
+																	text: text,
+																})
+																.catch(function (e) {
+																	// fallback to opening image in new tab
+																	var url = URL.createObjectURL(blob);
+																	window.open(url, '_blank');
+																});
+														} else {
+															// no file-sharing support: open image in new tab so user can save/share manually
+															var url = URL.createObjectURL(blob);
+															window.open(url, '_blank');
+														}
+													});
+												});
+										});
+									}
+
+									// attach handlers to buttons inside swal (after short delay to ensure DOM)
+									setTimeout(function () {
+										$('#share-whatsapp')
+											.off('click')
+											.on('click', function () {
+												shareWhatsApp(
+													'He completado 1-to-121 en ' +
+														cuentaTiempo +
+														' segundos!'
+												);
+											});
+										$('#share-browser')
+											.off('click')
+											.on('click', function () {
+												shareText(
+													'He completado 1-to-121 en ' +
+														cuentaTiempo +
+														' segundos!',
+													'https://1-to-121.vercel.app'
+												);
+											});
+										$('#share-screenshot')
+											.off('click')
+											.on('click', function () {
+												shareScreenshot(
+													'He completado 1-to-121 en ' +
+														cuentaTiempo +
+														' segundos!'
+												);
+											});
+										$('#restart-game')
+											.off('click')
+											.on('click', function () {
+												swal.close();
+												setTimeout(function () {
+													location.href = 'loading/index.html';
+												}, 300);
+											});
+									}, 60);
 								}
 
 								$('#objetivo-numero').text(objetivo);
